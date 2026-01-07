@@ -28,7 +28,7 @@ fi
 
 # 3. Install Python Requirements for the Builder
 echo "[+] Installing Python requirements for the builder..."
-pip3 install -r requirements.txt --quiet
+pip3 install -r requirements.txt --quiet --break-system-packages || pip3 install -r requirements.txt --quiet
 
 # 4. Initialize Wine Prefix
 WINE_DIR="$USER_HOME/.wine"
